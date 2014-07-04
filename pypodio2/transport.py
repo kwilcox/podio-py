@@ -31,6 +31,34 @@ class OAuthToken(object):
         return {'authorization': "OAuth2 %s" % self.access_token}
 
 
+class OAuthRefreshAuthorization(object):
+    """Regenerates headers for Podio OAuth2 Authorization"""
+
+    def __init__(self, key, secret, refresh_token, domain):
+        body = {'grant_type': 'refresh_token',
+                'client_id': key,
+                'client_secret': secret,
+                'refresh_token': refresh_token}
+        h = Http(disable_ssl_certificate_validation=True)
+        headers = {'content-type': 'application/x-www-form-urlencoded'}
+        response, data = h.request(domain + "/oauth/token", "POST",
+                                   urlencode(body), headers=headers)
+        self.token = OAuthToken(_handle_response(response, data))
+
+    def __call__(self):
+        return self.token.to_headers()
+
+
+class OAuthTokenAuthorization(object):
+    """Generates headers for Podio OAuth2 Authorization"""
+
+    def __init__(self, token):
+        self.token = token
+
+    def __call__(self):
+        return self.token.to_headers()
+
+
 class OAuthAuthorization(object):
     """Generates headers for Podio OAuth2 Authorization"""
 
